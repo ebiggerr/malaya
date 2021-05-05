@@ -18,9 +18,9 @@ GPU version
 
     $ pip install malaya-gpu
 
-Only **Python 3.6 and above** and **Tensorflow 1.15 and above but not 2.0** are supported.
+Only **Python 3.6.0 and above** and **Tensorflow 1.15.0 and above** are supported.
 
-We recommend to use **virtualenv** for development.
+We recommend to use **virtualenv** for development. All examples tested on Tensorflow version 1.15.4 and 2.4.1.
 
 Features
 --------
@@ -54,6 +54,7 @@ Features
 -  **Zero-shot classification**, provide Zero-shot classification interface using Transformer-Bahasa to recognize texts without any labeled training data.
 -  **Hybrid 8-bit Quantization**, provide hybrid 8-bit quantization for all models to reduce inference time up to 2x and model size up to 4x.
 -  **Longer Sequences Transformer**, provide BigBird + Pegasus for longer Abstractive Summarization, Neural Machine Translation and Relevancy Analysis sequences.
+-  **Distilled Transformer**, provide distilled transformer models for Abstractive Summarization.
 
 Pretrained Models
 ------------------
@@ -68,7 +69,6 @@ Malaya also released Bahasa pretrained models, simply check at `Malaya/pretraine
 - **GPT2**, Language Models are Unsupervised Multitask Learners, https://github.com/openai/gpt-2
 - **LM-Transformer**, Exactly like T5, but use Tensor2Tensor instead Mesh Tensorflow with little tweak, no paper produced.
 - **PEGASUS**, Pre-training with Extracted Gap-sentences for Abstractive Summarization, https://arxiv.org/abs/1912.08777
-- **SMITH**, Siamese Multi-depth Transformer-based Hierarchical Encoder, https://research.google/pubs/pub49617/
 - **T5**, Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer, https://arxiv.org/abs/1910.10683
 - **TinyBERT**, Distilling BERT for Natural Language Understanding, https://arxiv.org/abs/1909.10351
 - **Word2Vec**, Efficient Estimation of Word Representations in Vector Space, https://arxiv.org/abs/1301.3781
@@ -95,17 +95,11 @@ If you use our software for research, please cite:
 Acknowledgement
 ----------------
 
-Thanks to `Im Big <https://www.facebook.com/imbigofficial/>`_, `LigBlou <https://www.facebook.com/ligblou>`_, `Mesolitica <https://mesolitica.com/>`_ and `KeyReply <https://www.keyreply.com/>`_ for sponsoring AWS, GCP and private cloud to train Malaya models.
+Thanks to `KeyReply <https://www.keyreply.com/>`_ for sponsoring private cloud to train Malaya models, without it, this library will collapse entirely. 
+
+Also, thanks to `Tensorflow Research Cloud <https://www.tensorflow.org/tfrc>`_ for free TPUs access.
 
 Contributing
 ----------------
 
 Thank you for contributing this library, really helps a lot. Feel free to contact me to suggest me anything or want to contribute other kind of forms, we accept everything, not just code!
-
-License
---------
-
-.. |License| image:: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fhuseinzol05%2FMalaya.svg?type=large
-   :target: https://app.fossa.io/projects/git%2Bgithub.com%2Fhuseinzol05%2FMalaya?ref=badge_large
-
-|License|

@@ -297,9 +297,6 @@ malaya.model.bert
 .. autoclass:: malaya.model.bert.ZeroshotBERT()
     :members:
 
-.. autoclass:: malaya.model.bert.ParaphraseBERT()
-    :members:
-
 malaya.model.bigbird
 ----------------------------------
 
@@ -307,6 +304,9 @@ malaya.model.bigbird
     :members:
 
 .. autoclass:: malaya.model.bigbird.Translation()
+    :members:
+
+.. autoclass:: malaya.model.bigbird.Summarization()
     :members:
 
 malaya.model.extractive_summarization
@@ -330,6 +330,12 @@ malaya.model.ml
     :members:
 
 .. autoclass:: malaya.model.ml.MultilabelBayes()
+    :members:
+
+malaya.model.pegasus
+----------------------------------
+
+.. autoclass:: malaya.model.pegasus.Summarization()
     :members:
 
 malaya.model.t5

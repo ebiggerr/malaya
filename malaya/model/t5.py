@@ -1,55 +1,50 @@
 import tensorflow as tf
 from malaya.text.function import (
     transformer_textcleaning,
+    summarization_textcleaning,
     split_into_sentences,
     upperfirst,
 )
-from malaya.text.rouge import (
-    filter_rouge,
-    postprocessing_summarization,
-    find_lapor_and_remove,
-)
-from malaya.model.abstract import Seq2Seq
+from malaya.text.rouge import postprocess_summary
+from malaya.model.abstract import Seq2Seq, Abstract
 from herpetologist import check_type
 from typing import List
-import re
-
-
-def cleaning(string):
-    return re.sub(r'[ ]+', ' ', string).strip()
 
 
 def remove_repeat_fullstop(string):
     return ' '.join([k.strip() for k in string.split('.') if len(k.strip())])
 
 
-class T5:
-    def __init__(self, X, decode, sess, pred):
-        self._X = X
-        self._decode = decode
+class T5(Abstract):
+    def __init__(self, input_nodes, output_nodes, sess):
+        self._input_nodes = input_nodes
+        self._output_nodes = output_nodes
         self._sess = sess
-        self._pred = pred
 
     def _predict(self, string):
-        if self._pred:
-            r = self._pred([string])[0].decode('utf-8')
-        else:
-            r = self._sess.run(self._decode, feed_dict = {self._X: [string]})[
-                0
-            ].decode('utf-8')
-        return r
+        r = self._execute(
+            inputs = [[string]],
+            input_labels = ['inputs'],
+            output_labels = ['decode'],
+        )
+        return r['decode'][0].decode('utf-8')
 
 
 class Summarization(T5, Seq2Seq):
-    def __init__(self, X, decode, sess, pred):
-        T5.__init__(self, X = X, decode = decode, sess = sess, pred = pred)
+    def __init__(self, input_nodes, output_nodes, sess):
+        T5.__init__(
+            self,
+            input_nodes = input_nodes,
+            output_nodes = output_nodes,
+            sess = sess,
+        )
 
     def _summarize(self, string, mode, postprocess, **kwargs):
-        summary = upperfirst(self._predict(f'{mode}: {cleaning(string)}'))
+        summary = upperfirst(
+            self._predict(f'{mode}: {summarization_textcleaning(string)}')
+        )
         if postprocess and mode != 'tajuk':
-            summary = filter_rouge(string, summary, **kwargs)
-            summary = postprocessing_summarization(summary)
-            summary = find_lapor_and_remove(string, summary)
+            summary = postprocess_summary(string, summary, **kwargs)
         return summary
 
     @check_type
@@ -90,8 +85,13 @@ class Summarization(T5, Seq2Seq):
 
 
 class Generator(T5, Seq2Seq):
-    def __init__(self, X, decode, sess, pred):
-        T5.__init__(self, X = X, decode = decode, sess = sess, pred = pred)
+    def __init__(self, input_nodes, output_nodes, sess):
+        T5.__init__(
+            self,
+            input_nodes = input_nodes,
+            output_nodes = output_nodes,
+            sess = sess,
+        )
 
     @check_type
     def greedy_decoder(self, strings: List[str]):
@@ -114,16 +114,21 @@ class Generator(T5, Seq2Seq):
         ]
         points = ' '.join(points)
         points = f'karangan: {points}'
-        return upperfirst(self._predict(cleaning(points)))
+        return upperfirst(self._predict(summarization_textcleaning(points)))
 
 
 class Paraphrase(T5, Seq2Seq):
-    def __init__(self, X, decode, sess, pred):
-        T5.__init__(self, X = X, decode = decode, sess = sess, pred = pred)
+    def __init__(self, input_nodes, output_nodes, sess):
+        T5.__init__(
+            self,
+            input_nodes = input_nodes,
+            output_nodes = output_nodes,
+            sess = sess,
+        )
 
     def _paraphrase(self, string):
 
-        string = f'parafrasa: {cleaning(string)}'
+        string = f'parafrasa: {summarization_textcleaning(string)}'
         return upperfirst(self._predict(string))
 
     @check_type

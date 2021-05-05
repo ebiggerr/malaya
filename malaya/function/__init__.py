@@ -26,14 +26,11 @@ def check_tf_version():
 
 
 if check_tf_version() > 1:
-    try:
-        from tensorflow_addons.seq2seq import beam_search_decoder
-    except:
-        import warnings
+    import warnings
 
-        warnings.warn(
-            'Cannot import beam_search_ops from tensorflow, some deep learning models may not able to load, make sure tensorflow-addons already installed by `pip install tensorflow-addons`.'
-        )
+    warnings.warn(
+        'Cannot import beam_search_ops not available for Tensorflow 2, `deep_model` for stemmer will not available to use.'
+    )
 
 else:
     try:
@@ -42,7 +39,7 @@ else:
         import warnings
 
         warnings.warn(
-            'Cannot import beam_search_ops from tensorflow, some deep learning models may not able to load, make sure Tensorflow 1 version >= 1.15'
+            'Cannot import beam_search_ops from tensorflow, `deep_model` for stemmer will not available to use, make sure Tensorflow 1 version >= 1.15'
         )
 
 
@@ -84,9 +81,22 @@ def check_files_local(file):
     return True
 
 
+def nodes_session(graph, inputs, outputs, extra = None, attention = None):
+    input_nodes = {i: graph.get_tensor_by_name(f'import/{i}:0') for i in inputs}
+    output_nodes = {
+        o: graph.get_tensor_by_name(f'import/{o}:0') for o in outputs
+    }
+    if extra:
+        extra = {k: graph.get_tensor_by_name(v) for k, v in extra.items()}
+        output_nodes = {**output_nodes, **extra}
+    if attention:
+        output_nodes = {**output_nodes, **attention}
+    return input_nodes, output_nodes
+
+
 def generate_session(graph, **kwargs):
+    config = tf.compat.v1.ConfigProto()
     if gpu_available():
-        config = tf.ConfigProto()
         if 'gpu' in kwargs:
             config.allow_soft_placement = True
 
@@ -99,13 +109,25 @@ def generate_session(graph, **kwargs):
                 raise ValueError('gpu_limit must 0 < gpu_limit < 1')
 
             config.gpu_options.per_process_gpu_memory_fraction = gpu_limit
-
         config.gpu_options.allow_growth = True
-        sess = tf.compat.v1.InteractiveSession(config = config, graph = graph)
 
-    else:
-        sess = tf.compat.v1.InteractiveSession(graph = graph)
+    sess = tf.compat.v1.Session(config = config, graph = graph)
     return sess
+
+
+def get_device(**kwargs):
+    device = 'CPU'
+    no = 0
+    if gpu_available():
+        if 'gpu' in kwargs:
+            gpu = kwargs.get('gpu', 0)
+            if not isinstance(gpu, int):
+                raise ValueError('gpu must an int')
+            if not 0 <= gpu < len(__gpu__):
+                raise ValueError(f'gpu must 0 <= gpu < {len(__gpu__)}')
+            no = gpu
+            device = 'GPU'
+    return f'/device:{device}:{no}'
 
 
 def load_graph(frozen_graph_filename, **kwargs):
@@ -146,20 +168,10 @@ def load_graph(frozen_graph_filename, **kwargs):
                 node.input[0] = node.input[1]
                 del node.input[1]
 
+    device = get_device(**kwargs)
+
     with tf.Graph().as_default() as graph:
-        if gpu_available():
-            if 'gpu' in kwargs:
-                gpu = kwargs.get('gpu', 0)
-                if not isinstance(gpu, int):
-                    raise ValueError('gpu must an int')
-                if not 0 <= gpu < len(__gpu__):
-                    raise ValueError(f'gpu must 0 <= gpu < {len(__gpu__)}')
-                gpu = str(gpu)
-                with tf.device(f'/device:GPU:{gpu}'):
-                    tf.import_graph_def(graph_def)
-            else:
-                tf.import_graph_def(graph_def)
-        else:
+        with tf.device(device):
             tf.import_graph_def(graph_def)
     return graph
 
